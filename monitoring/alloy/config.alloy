@@ -1,0 +1,67 @@
+// ==========================================
+// 1. MÉTRICAS DEL SERVIDOR (Reemplazo de Node Exporter)
+// ==========================================
+prometheus.exporter.unix "node_metrics" { 
+}
+
+prometheus.scrape "scrape_node" {
+  targets    = prometheus.exporter.unix.node_metrics.targets
+  forward_to = [prometheus.remote_write.to_prometheus.receiver]
+}
+
+// ==========================================
+// 2. MÉTRICAS DE LA APP (Reemplazo del scrape de backend)
+// ==========================================
+prometheus.scrape "scrape_backend" {
+  targets = [{
+    __address__ = "backend:3000",
+  }]
+  metrics_path = "/metrics"
+  forward_to   = [prometheus.remote_write.to_prometheus.receiver]
+}
+
+// Envío de todas las métricas recolectadas a Prometheus
+prometheus.remote_write "to_prometheus" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// ==========================================
+// 3. LOGS DE CONTENEDORES DOCKER (Reemplazo de Promtail)
+// ==========================================
+// 1. Descubrir contenedores Docker
+discovery.docker "docker_containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// 2. Convertir metadata de Docker en labels de Loki
+discovery.relabel "docker_labels" {
+  targets = discovery.docker.docker_containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    target_label  = "service"
+  }
+}
+
+// 3. Leer los logs de los contenedores
+loki.source.docker "docker_logs" {
+  host    = "unix:///var/run/docker.sock"
+  targets = discovery.relabel.docker_labels.output
+
+  forward_to = [loki.write.to_loki.receiver]
+}
+
+// 4. Enviar a Loki
+loki.write "to_loki" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
