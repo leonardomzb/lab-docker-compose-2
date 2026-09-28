@@ -1,7 +1,10 @@
 // ==========================================
 // 1. MÉTRICAS DEL SERVIDOR (Reemplazo de Node Exporter)
 // ==========================================
-prometheus.exporter.unix "node_metrics" { 
+prometheus.exporter.unix "node_metrics" {
+  rootfs_path = "/host/root"
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
 }
 
 prometheus.scrape "scrape_node" {

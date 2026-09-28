@@ -6,16 +6,19 @@ datasources:
     access: proxy
     url: http://prometheus:9090
     isDefault: true
-  
+
   - name: Loki
     type: loki
     access: proxy
     url: http://loki:3100
     isDefault: false
+    
+# Dashboard id 1860 11074 (node 11159)
 
-
-
-# Dashboard id 1860 11074    (node 11159)
- 
 # sudo chown -R 472:472 ./monitoring/grafana/provisioning/datasources
 # sudo chmod -R 755 ./monitoring/grafana/provisioning/datasources
+# sudo chmod -R 755 ./monitoring/grafana/provisioning/dashboards
+
+
+# chmod 755 init
+# chmod 644 init/*

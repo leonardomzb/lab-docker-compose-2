@@ -37,7 +37,7 @@
             const detalleDiv = document.getElementById('detalle');
             detalleDiv.innerText = "Consultando al backend y BD...";
             try {
-                const respuesta = await fetch(`http://localhost/api/pintura/${id}`);
+                const respuesta = await fetch(`/api/pintura/${id}`);
                 const datos = await respuesta.json();
                 if(datos.autor) {
                     detalleDiv.innerHTML = `🎨 <strong>Autor:</strong> ${datos.autor} | 📅 <strong>Año:</strong> ${datos.anio}`;
